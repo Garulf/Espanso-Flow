@@ -1,0 +1,12 @@
+{
+    "ID": "20FB72EFBB534305B29CB82D8BF4C358",
+    "ActionKeyword": "es",
+    "Name": "Espanso Flow",
+    "Description": "Search and expand your Espanso shortcuts",
+    "Author": "Garulf",
+    "Version": "0.0.1",
+    "Language": "python",
+    "Website": "https://github.com/Garulf/espanso-flow",
+    "IcoPath": "./icon.png",
+    "ExecuteFileName": "run.py"
+}

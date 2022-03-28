@@ -1,0 +1,12 @@
+body:
+  - type: textBlock
+    attributes:
+      name: description
+      description: >
+        Please provide the PATH to Espano's executable ("espanso.cmd"). If left blank the plugin will attempt to automatically detect its default path.
+        Example: C:\%LOCALAPPDATA%\Programs\Espanso\espanso.cmd
+  - type: input
+    attributes:
+      name: path
+      label: 'Espanso PATH:'
+      defaultValue: ""
