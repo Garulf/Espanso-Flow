@@ -15,7 +15,7 @@ MATCH_DIR = ROAMING.joinpath('Espanso', 'match')
 TRIGGER_ARG = '-t'
 
 
-class Espanso(object):
+class Espanso:
 
     def __init__(self):
         pass
@@ -39,7 +39,7 @@ class Espanso(object):
         return match.snippet(trigger)
 
 
-class MatchFile(object):
+class MatchFile:
     
     def __init__(self, match_file):
         self.match_file = match_file
@@ -60,7 +60,7 @@ class MatchFile(object):
         for snippet in matches[0]['matches']:
             yield Snippet(self.match_file, snippet)
 
-class Snippet(object):
+class Snippet:
 
     def __init__(self, match_file, data):
         self.match_file = match_file
