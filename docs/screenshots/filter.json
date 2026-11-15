@@ -1,0 +1,16 @@
+{
+  "keyword": "es",
+  "query": "regards",
+  "icon": "../../data/icon.png",
+  "max_results": 1,
+  "selection": 0,
+  "results": [
+    {
+      "title": ":sig",
+      "subtitle": "Best regards, Alex Morgan",
+      "icon": "../../data/icon.png"
+    }
+  ],
+  "query_suggestion": "",
+  "show_caret": false
+}

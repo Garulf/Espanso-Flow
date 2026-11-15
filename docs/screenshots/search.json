@@ -1,0 +1,36 @@
+{
+  "keyword": "es",
+  "query": "",
+  "icon": "../../data/icon.png",
+  "max_results": 5,
+  "selection": 0,
+  "results": [
+    {
+      "title": ":sig",
+      "subtitle": "Best regards, Alex Morgan",
+      "icon": "../../data/icon.png"
+    },
+    {
+      "title": ":addr",
+      "subtitle": "221B Baker Street, London NW1 6XE",
+      "icon": "../../data/icon.png"
+    },
+    {
+      "title": ":date",
+      "subtitle": "15/11/2026",
+      "icon": "../../data/icon.png"
+    },
+    {
+      "title": ":mail",
+      "subtitle": "alex.morgan@example.com",
+      "icon": "../../data/icon.png"
+    },
+    {
+      "title": ":shrug",
+      "subtitle": "¯\\_(ツ)_/¯",
+      "icon": "../../data/icon.png"
+    }
+  ],
+  "query_suggestion": "",
+  "show_caret": false
+}
