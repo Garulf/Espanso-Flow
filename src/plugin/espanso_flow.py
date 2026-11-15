@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List, Mapping, Optional
 
 from pyflowlauncher import FlowLauncherV2, Plugin, Result
+from pyflowlauncher.string_matcher import string_matcher
 
 import espanso
 
@@ -27,11 +28,23 @@ def pythonw() -> Path:
     return windowless if windowless.exists() else Path(sys.executable)
 
 
-def snippet_result(snippet: espanso.Snippet) -> Result:
+def search_score(search: str, snippet: espanso.Snippet) -> Optional[int]:
+    if not search.strip():
+        return 0
+    scores = [
+        match.score
+        for match in (string_matcher(search, text) for text in (*snippet.triggers, snippet.preview))
+        if match.matched and match.score >= match.score_cutoff
+    ]
+    return max(scores, default=None)
+
+
+def snippet_result(snippet: espanso.Snippet, score: int) -> Result:
     return Result(
         title=", ".join(snippet.triggers),
         subtitle=snippet.preview,
         icon=ICON,
+        score=score,
     ).add_action(activate, parameters=[snippet.trigger])
 
 
@@ -55,7 +68,12 @@ def query(query: str) -> List[Result]:
                 icon=ICON,
             )
         ]
-    return [snippet_result(snippet) for snippet in espanso.snippets(config, env=os.environ)]
+    results = []
+    for snippet in espanso.snippets(config, env=os.environ):
+        score = search_score(query, snippet)
+        if score is not None:
+            results.append(snippet_result(snippet, score))
+    return results
 
 
 @plugin.on_method

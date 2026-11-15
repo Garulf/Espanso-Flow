@@ -76,3 +76,24 @@ def test_query_reads_the_portable_config_next_to_the_program(appdata, settings):
     settings["path"] = str(portable / "espanso.cmd")
 
     assert [result.title for result in espanso_flow.query("")] == [":p"]
+
+
+def test_query_filters_and_scores_by_trigger_and_text(program, write):
+    write(
+        "match/base.yml",
+        """
+        matches:
+          - trigger: ":sig"
+            replace: "Best regards, Alex"
+          - trigger: ":addr"
+            replace: "221B Baker Street"
+          - trigger: ":meet"
+            replace: "Can we meet on Friday?"
+        """,
+    )
+
+    assert [result.title for result in espanso_flow.query("baker")] == [":addr"]
+    sig, *rest = espanso_flow.query("sig")
+    assert (sig.title, rest) == (":sig", [])
+    assert sig.score > 0
+    assert len(espanso_flow.query("")) == 3
