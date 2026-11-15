@@ -4,6 +4,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple
 
@@ -73,14 +74,22 @@ def snippets(
 
 def load_file(path: Path, now: datetime) -> List[Snippet]:
     try:
+        stat = path.stat()
+    except OSError:
+        return []
+    entries = read_entries(path, stat.st_mtime_ns, stat.st_size)
+    return [snippet for snippet in (to_snippet(entry, path, now) for entry in entries) if snippet]
+
+
+@lru_cache(maxsize=512)
+def read_entries(path: Path, mtime_ns: int, size: int) -> Tuple[Any, ...]:
+    try:
         data = _yaml.load(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, YAMLError):
         log.warning("Skipping unreadable match file %s", path, exc_info=True)
-        return []
+        return ()
     entries = data.get("matches") if isinstance(data, dict) else None
-    if not isinstance(entries, list):
-        return []
-    return [snippet for snippet in (to_snippet(entry, path, now) for entry in entries) if snippet]
+    return tuple(entries) if isinstance(entries, list) else ()
 
 
 def to_snippet(entry: Any, source: Path, now: datetime) -> Optional[Snippet]:

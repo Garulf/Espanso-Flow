@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -188,3 +189,20 @@ def test_config_dir_follows_espanso_lookup_order(appdata):
     for expected in reversed(candidates):
         expected.mkdir(parents=True)
         assert espanso.config_dir(env, home, program) == expected
+
+
+def test_match_files_are_parsed_again_only_when_they_change(config, write, monkeypatch):
+    path = write("match/base.yml", match_file(":one"))
+    parsed = []
+    real_load = espanso._yaml.load
+    monkeypatch.setattr(espanso._yaml, "load", lambda text: parsed.append(text) or real_load(text))
+
+    assert [s.trigger for s in espanso.snippets(config, NOW)] == [":one"]
+    assert [s.trigger for s in espanso.snippets(config, NOW)] == [":one"]
+    assert len(parsed) == 1
+
+    path.write_text(match_file(":changed"), encoding="utf-8")
+    os.utime(path, ns=(path.stat().st_atime_ns, path.stat().st_mtime_ns + 1_000_000_000))
+
+    assert [s.trigger for s in espanso.snippets(config, NOW)] == [":changed"]
+    assert len(parsed) == 2
