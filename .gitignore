@@ -113,10 +113,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Flox library folder
-flox
-
 # VScode
-
 .vscode/
-bin/
