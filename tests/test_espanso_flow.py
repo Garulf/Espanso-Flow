@@ -59,3 +59,20 @@ def test_snippets_with_several_triggers_expand_the_first(program, write):
 
     assert result.title == ":hello, :hey"
     assert result.json_rpc_action["Parameters"] == [":hello"]
+
+
+def test_query_reports_a_missing_config_folder(program):
+    (result,) = espanso_flow.query("")
+
+    assert result.title == "Espanso config folder not found"
+
+
+def test_query_reads_the_portable_config_next_to_the_program(appdata, settings):
+    portable = appdata / "Espanso"
+    (portable / "espanso.cmd").parent.mkdir()
+    (portable / "espanso.cmd").write_text("")
+    (portable / ".espanso" / "match").mkdir(parents=True)
+    (portable / ".espanso" / "match" / "base.yml").write_text('matches:\n  - trigger: ":p"\n    replace: "portable"\n')
+    settings["path"] = str(portable / "espanso.cmd")
+
+    assert [result.title for result in espanso_flow.query("")] == [":p"]

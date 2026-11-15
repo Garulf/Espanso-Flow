@@ -46,7 +46,16 @@ def query(query: str) -> List[Result]:
                 icon=ICON,
             )
         ]
-    return [snippet_result(snippet) for snippet in espanso.snippets(espanso.config_dir(os.environ))]
+    config = espanso.config_dir(os.environ, Path.home(), exe)
+    if config is None:
+        return [
+            Result(
+                title="Espanso config folder not found",
+                subtitle="Run 'espanso path' to see where Espanso keeps its config.",
+                icon=ICON,
+            )
+        ]
+    return [snippet_result(snippet) for snippet in espanso.snippets(config, env=os.environ)]
 
 
 @plugin.on_method

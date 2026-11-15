@@ -144,3 +144,47 @@ def test_date_vars_are_filled_into_the_replacement(config, write):
     )
 
     assert [s.preview for s in espanso.snippets(config, NOW)] == ["Today is 2026-11-15, {{ who }}", "{{day}}"]
+
+
+def match_file(trigger):
+    return f'matches:\n  - trigger: "{trigger}"\n    replace: "{trigger} text"\n'
+
+
+def test_v2_match_folder_is_read_like_espanso_does(config, write):
+    write("config/default.yml", "toggle_key: ALT\n")
+    write("match/base.yml", match_file(":base"))
+    write("match/work/email.yml", match_file(":work"))
+    write("match/packages/greetings/package.yml", match_file(":pkg"))
+    write("match/_chrome_only.yml", match_file(":hidden"))
+    write("match/notes.txt", "not yaml")
+
+    triggers = {s.trigger for s in espanso.snippets(config, NOW)}
+
+    assert triggers == {":base", ":work", ":pkg"}
+
+
+def test_legacy_layout_is_still_read(appdata, config, write):
+    write("default.yml", "toggle_key: ALT\n" + match_file(":default"))
+    write("user/emails.yml", match_file(":user"))
+    write("packages/greetings/package.yml", match_file(":embedded"))
+    old_packages = appdata / "Local" / "espanso" / "packages" / "emoji" / "package.yml"
+    old_packages.parent.mkdir(parents=True)
+    old_packages.write_text(match_file(":old-pkg"), encoding="utf-8")
+    env = {"LOCALAPPDATA": str(appdata / "Local")}
+
+    triggers = [s.trigger for s in espanso.snippets(config, NOW, env)]
+
+    assert triggers == [":default", ":user", ":embedded", ":old-pkg"]
+
+
+def test_config_dir_follows_espanso_lookup_order(appdata):
+    home = appdata / "home"
+    env = {"APPDATA": str(appdata / "Roaming")}
+    program = appdata / "Portable" / "espanso.cmd"
+    roaming = appdata / "Roaming" / "espanso"
+    candidates = [program.parent / ".espanso", home / ".espanso", home / ".config" / "espanso", roaming]
+
+    assert espanso.config_dir(env, home, program) is None
+    for expected in reversed(candidates):
+        expected.mkdir(parents=True)
+        assert espanso.config_dir(env, home, program) == expected

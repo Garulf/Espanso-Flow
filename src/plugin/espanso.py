@@ -33,20 +33,42 @@ def default_program(env: Mapping[str, str]) -> Optional[Path]:
     return Path(local, "Programs", "Espanso", PROGRAM) if local else None
 
 
-def config_dir(env: Mapping[str, str]) -> Optional[Path]:
-    appdata = env.get("APPDATA")
-    return Path(appdata, "espanso") if appdata else None
+def config_dir(env: Mapping[str, str], home: Path, program: Optional[Path]) -> Optional[Path]:
+    candidates = [home / ".espanso", home / ".config" / "espanso"]
+    if program is not None:
+        candidates.insert(0, program.parent / ".espanso")
+    if env.get("APPDATA"):
+        candidates.append(Path(env["APPDATA"], "espanso"))
+    return next((candidate for candidate in candidates if candidate.is_dir()), None)
 
 
-def match_files(config: Path) -> List[Path]:
-    return sorted((config / "match").glob("*.yml"))
+def is_legacy(config: Path) -> bool:
+    return (config / "user").is_dir() and (config / "default.yml").is_file()
 
 
-def snippets(config: Optional[Path], now: Optional[datetime] = None) -> List[Snippet]:
+def match_files(config: Path, env: Mapping[str, str]) -> List[Path]:
+    if is_legacy(config):
+        return legacy_match_files(config, env)
+    return sorted(path for path in (config / "match").rglob("*.yml") if not path.name.startswith("_"))
+
+
+def legacy_match_files(config: Path, env: Mapping[str, str]) -> List[Path]:
+    package_dirs = [config / "packages"]
+    if env.get("LOCALAPPDATA"):
+        package_dirs.append(Path(env["LOCALAPPDATA"], "espanso", "packages"))
+    files = [config / "default.yml", *sorted((config / "user").rglob("*.yml"))]
+    for packages in package_dirs:
+        files.extend(sorted(packages.rglob("package.yml")))
+    return files
+
+
+def snippets(
+    config: Optional[Path], now: Optional[datetime] = None, env: Optional[Mapping[str, str]] = None
+) -> List[Snippet]:
     if config is None:
         return []
     now = now or datetime.now()
-    return [snippet for path in match_files(config) for snippet in load_file(path, now)]
+    return [snippet for path in match_files(config, env or {}) for snippet in load_file(path, now)]
 
 
 def load_file(path: Path, now: datetime) -> List[Snippet]:

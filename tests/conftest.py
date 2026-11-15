@@ -10,10 +10,13 @@ import espanso_flow
 def appdata(tmp_path, monkeypatch):
     roaming = tmp_path / "Roaming"
     local = tmp_path / "Local"
-    roaming.mkdir()
-    local.mkdir()
+    home = tmp_path / "home"
+    for folder in (roaming, local, home):
+        folder.mkdir()
     monkeypatch.setenv("APPDATA", str(roaming))
     monkeypatch.setenv("LOCALAPPDATA", str(local))
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
     return tmp_path
 
 
