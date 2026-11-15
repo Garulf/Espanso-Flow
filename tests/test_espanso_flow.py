@@ -50,3 +50,12 @@ def test_pythonw_falls_back_to_the_running_python(monkeypatch, tmp_path):
 def test_trigger_script_is_shipped_next_to_the_plugin():
     assert espanso_flow.TRIGGER_SCRIPT == Path(espanso_flow.__file__).with_name("trigger.py")
     assert espanso_flow.TRIGGER_SCRIPT.exists()
+
+
+def test_snippets_with_several_triggers_expand_the_first(program, write):
+    write("match/base.yml", 'matches:\n  - triggers: [":hello", ":hey"]\n    replace: "Hello!"\n')
+
+    (result,) = espanso_flow.query("")
+
+    assert result.title == ":hello, :hey"
+    assert result.json_rpc_action["Parameters"] == [":hello"]

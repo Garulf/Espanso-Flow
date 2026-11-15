@@ -29,7 +29,7 @@ def pythonw() -> Path:
 
 def snippet_result(snippet: espanso.Snippet) -> Result:
     return Result(
-        title=snippet.trigger,
+        title=", ".join(snippet.triggers),
         subtitle=snippet.preview,
         icon=ICON,
     ).add_action(activate, parameters=[snippet.trigger])

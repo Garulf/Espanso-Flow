@@ -66,3 +66,81 @@ def test_date_snippets_preview_the_current_date(config, write):
 
 def test_no_config_dir_means_no_snippets():
     assert espanso.snippets(None, NOW) == []
+
+
+def test_files_without_matches_are_skipped(config, write):
+    write("match/vars.yml", "global_vars:\n  - name: me\n    type: echo\n    params:\n      echo: Alex\n")
+    write("match/empty.yml", "")
+    write("match/broken.yml", "matches: [\n")
+    write("match/base.yml", 'matches:\n  - trigger: ":hi"\n    replace: "Hello"\n')
+
+    assert [s.trigger for s in espanso.snippets(config, NOW)] == [":hi"]
+
+
+def test_multiple_triggers_and_regex_matches(config, write):
+    write(
+        "match/base.yml",
+        """
+        matches:
+          - triggers: [":hello", ":hey"]
+            replace: "Hello!"
+          - regex: ":greet\\\\((?P<person>.*)\\\\)"
+            replace: "Hi {{person}}!"
+        """,
+    )
+
+    (snippet,) = espanso.snippets(config, NOW)
+
+    assert snippet.triggers == (":hello", ":hey")
+    assert snippet.trigger == ":hello"
+
+
+def test_preview_falls_back_to_other_replacement_kinds(config, write):
+    write(
+        "match/base.yml",
+        """
+        matches:
+          - trigger: ":md"
+            markdown: "**bold**"
+          - trigger: ":form"
+            form: "Hey [[name]]"
+          - trigger: ":cat"
+            image_path: "C:/Pictures/cat.png"
+          - trigger: ":nothing"
+            label: "Only a label"
+        """,
+    )
+
+    assert [s.preview for s in espanso.snippets(config, NOW)] == [
+        "**bold**",
+        "Hey [[name]]",
+        "C:/Pictures/cat.png",
+        "Only a label",
+    ]
+
+
+def test_date_vars_are_filled_into_the_replacement(config, write):
+    write(
+        "match/base.yml",
+        """
+        matches:
+          - trigger: ":today"
+            replace: "Today is {{day}}, {{ who }}"
+            vars:
+              - name: who
+                type: echo
+                params:
+                  echo: Alex
+              - name: day
+                type: date
+                params:
+                  format: "%Y-%m-%d"
+          - trigger: ":noformat"
+            replace: "{{day}}"
+            vars:
+              - name: day
+                type: date
+        """,
+    )
+
+    assert [s.preview for s in espanso.snippets(config, NOW)] == ["Today is 2026-11-15, {{ who }}", "{{day}}"]
